@@ -1,0 +1,433 @@
+<!doctype html>
+
+<head>
+    <meta name="viewport" content="user-scalable=0,width=device-width, initial-scale=1.0">
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<!-- <meta name="viewport" content="user-scalable=0"> -->
+<style>
+    .circle {
+        width: 20px;
+        height: 20px;
+        -webkit-border-radius: 25px;
+        -moz-border-radius: 25px;
+        border-radius: 25px;
+        background: red;
+        float: right;
+        margin: 10px;
+    }
+
+    input {
+        width: 300px;
+        font-size: 15px;
+        margin: 2px 0;
+        padding: 2px 5px;
+    }
+</style>
+<title>iSocket web App</title>
+</head>
+
+<body>
+    <!-- Google App Script：<input id="appUrl"><br />
+    試算表網址：<input id="sheetsUrl"><br />
+    工作表名稱：<input id="sheetName"><br />
+    列：<input id="startRow"><br />
+    欄：<input id="startColumn"><br /> -->
+    <!-- <button id="sendBtn">查詢</button><br /> -->
+
+    <div style=" max-width:100%;">
+        <h1 style="float: left;margin: 0px;">iSocket</h1>
+        <div class="circle" id="wifiled" style="background-color: rgb(128, 128, 128);"></div>
+        <p style="float: right; margin: 10px;">Wifi</p>
+        <div class="circle" id="breathingled" style="background-color: gray;"></div>
+        <p style="float: right; margin: 10px;">Status</p>
+    </div>
+
+    <div STYLE="background-color: transparent; width: 50px; height: 50px;" onClick="wificonnect()">
+        <!-- 點擊這裡 -->
+    </div>
+    <br>
+    <div style="padding-top: 30px; ">
+        <div id="container1" style="width: 100%; height: 400px; margin: 0 auto"></div>
+
+    </div>
+    <div id="container" style="width: 100%; height: 400px; margin-top:30px"></div>
+    <table width="100%" height="80">
+        　<tr>
+            <td align="center">
+                <a style="margin: 0px; font-size: 15px; font-weight:bold;"
+                    href="https://docs.google.com/spreadsheets/d/1f-yxok5m283z7TYlXCna7CqLuczwOWuhxQlZaBq9Qh8/edit#gid=1443104006">Design
+                    by Seal in 2021</a>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        var wifi = 0;
+        var show = $('#show');
+        var parameter = {};
+        window.setInterval(function () {
+            parameter = {
+                url: "https://docs.google.com/spreadsheets/d/1f-yxok5m283z7TYlXCna7CqLuczwOWuhxQlZaBq9Qh8/edit#gid=0",
+                name: "status",
+                startRow: 2,
+                startColumn: 1
+            };
+            $.get("https://script.google.com/macros/s/AKfycbxgaAw0thB9gxqFF4SotPqG0obuSJW1-dpoOUNiJquVcZAOfrXHZBxDal38k0F7jdSZBg/exec", parameter, function (data) {
+                if (!data) {
+                    show.text('無資料');
+                } else {
+                    // show.text(data);
+                    if (data == 0) {
+                        wifi = 0;
+                        document.getElementById('wifiled').style.backgroundColor = 'gray';
+                        // console.log(data);
+                    } else {
+                        document.getElementById('wifiled').style.backgroundColor = '#00ff22';
+                        // console.log(data);
+                    }
+                }
+            });
+        }, 1000);
+        var breath = 0;
+        window.setInterval(function () {
+            parameter = {
+                url: "https://docs.google.com/spreadsheets/d/1f-yxok5m283z7TYlXCna7CqLuczwOWuhxQlZaBq9Qh8/edit#gid=0",
+                name: "status",
+                startRow: 2,
+                startColumn: 2
+            };
+            $.get("https://script.google.com/macros/s/AKfycbxgaAw0thB9gxqFF4SotPqG0obuSJW1-dpoOUNiJquVcZAOfrXHZBxDal38k0F7jdSZBg/exec", parameter, function (data) {
+                if (!data) {
+                    show.text('無資料');
+                } else {
+                    // show.text(data);
+                    breath = data;
+                    if (data == 0) {
+                        document.getElementById('breathingled').style.backgroundColor = 'gray';
+                        console.log(breath);
+                    } else {
+                        document.getElementById('breathingled').style.backgroundColor = 'rgb(0, 132, 255)';
+
+                        console.log(breath);
+                    }
+                }
+            });
+        }, 2000);
+
+        var risk = 0;
+        window.setInterval(function () {
+            parameter = {
+                url: "https://docs.google.com/spreadsheets/d/1f-yxok5m283z7TYlXCna7CqLuczwOWuhxQlZaBq9Qh8/edit#gid=0",
+                name: "status",
+                startRow: 2,
+                startColumn: 3
+            };
+            $.get("https://script.google.com/macros/s/AKfycbxgaAw0thB9gxqFF4SotPqG0obuSJW1-dpoOUNiJquVcZAOfrXHZBxDal38k0F7jdSZBg/exec", parameter, function (data) {
+                if (!data) {
+                    show.text('無資料');
+                } else {
+                    // show.text(data);
+                    risk = data;
+                    console.log("risk:", risk);
+                }
+            });
+        }, 2100);
+
+
+        $(document).ready(function () {
+            var chart = {
+                type: 'spline',
+                animation: Highcharts.svg, // don't animate in IE < IE 10.
+                marginRight: 10,
+                events: {
+                    load: function () {
+                        // set up the updating of the chart each second
+                        var series1 = this.series[0];
+                        var series2 = this.series[1];
+                        var series3 = this.series[2];
+
+                        setInterval(function () {
+                            var risk1 = 0;
+                            if (risk == 1) {
+                                risk1 = Math.random() + 0.5;
+                                if (risk1 > 1) {
+                                    risk1 = 0.9;
+                                }
+                            } else {
+                                risk1 = Math.random() % 0.1;
+                            }
+                            var x = (new Date()).getTime(), // current time
+                                y = risk1;
+                            series1.addPoint([x, y], true, true);
+                        }, 2000);
+                        setInterval(function () {
+                            var risk1 = 0;
+                            if (risk == 2) {
+                                risk1 = Math.random() + 0.5;
+                                if (risk1 > 1) {
+                                    risk1 = 0.9;
+                                }
+                            } else {
+                                risk1 = Math.random() % 0.1;
+                            }
+                            var x = (new Date()).getTime(), // current time
+                                y = risk1;
+                            series2.addPoint([x, y], true, true);
+                        }, 2000);
+                        setInterval(function () {
+                            var risk1 = 0;
+                            if (risk == 3) {
+                                risk1 = Math.random() + 0.5;
+                                if (risk1 > 1) {
+                                    risk1 = 0.9;
+                                }
+                            } else {
+                                risk1 = Math.random() % 0.1;
+                            }
+                            var x = (new Date()).getTime(), // current time
+                                y = risk1;
+                            series3.addPoint([x, y], true, true);
+                        }, 2000);
+                    }
+                }
+            };
+            var title = {
+                text: '分類機率'
+
+            };
+            var xAxis = {
+                type: 'spline',
+                tickPixelInterval: 1000
+            };
+            var yAxis = {
+                title: {
+                    text: 'Risk'
+                },
+                ticks: {
+                    // steps: 10,
+                    // stepValue: 10,
+                    max: 3,
+                    min: 0
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#00ff22'
+                }]
+            };
+            var tooltip = {
+                formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                        Highcharts.numberFormat(this.y, 2);
+                }
+            };
+            var plotOptions = {
+                area: {
+                    pointStart: 1940,
+                    marker: {
+                        enabled: false,
+                        symbol: 'circle',
+                        radius: 2,
+                        states: {
+                            hover: {
+                                enabled: true
+                            }
+                        }
+                    }
+                }
+            };
+            var legend = {
+                enabled: true
+            };
+            var exporting = {
+                enabled: false
+            };
+            var series = [
+
+                {
+                    name: 'Low risk',
+                    data: (function () {
+                        // generate an array of random data
+                        var data1 = [], time = (new Date()).getTime();
+                        for (var i = -19; i <= 0; i += 1) {
+                            data1.push({
+                                x: time + i * 2000,
+                                y: 0
+                            });
+                        }
+                        return data1;
+                    }()),
+                },
+                {
+                    name: 'Medium risk',
+                    data: (function () {
+                        // generate an array of random data
+                        var data2 = [], time = (new Date()).getTime();
+                        for (var i = -19; i <= 0; i += 1) {
+                            data2.push({
+                                x: time + i * 2000,
+                                y: 0
+                            });
+                        }
+                        return data2;
+                    }())
+                },
+                {
+                    name: 'High risk',
+                    data: (function () {
+                        // generate an array of random data
+                        var data3 = [], time = (new Date()).getTime();
+                        for (var i = -19; i <= 0; i += 1) {
+                            data3.push({
+                                x: time + i * 2000,
+                                y: 0
+                            });
+                        }
+                        return data3;
+                    }()),
+                }
+            ];
+
+            var json = {};
+            json.chart = chart;
+            json.title = title;
+            json.tooltip = tooltip;
+            json.xAxis = xAxis;
+            json.yAxis = yAxis;
+            json.legend = legend;
+            json.exporting = exporting;
+            json.series = series;
+            json.plotOptions = plotOptions;
+
+
+            Highcharts.setOptions({
+                global: {
+                    useUTC: false
+                }
+            });
+            $('#container').highcharts(json);
+
+        });
+
+        $(document).ready(function () {
+            var chart = {
+                type: 'spline',
+                animation: Highcharts.svg, // don't animate in IE < IE 10.
+                marginRight: 10,
+                events: {
+                    load: function () {
+                        // set up the updating of the chart each second
+                        var series = this.series[0];
+                        setInterval(function () {
+                            var risk1 = 0;
+                            if (risk == 0) {
+                                risk1 = 0;
+                            } else if (risk == 1) {
+                                risk1 = 1;
+                            } else if (risk == 2) {
+                                risk1 = 2;
+                            } else if (risk == 3) {
+                                risk1 = 3;
+                            }
+                            var x = (new Date()).getTime(), // current time
+                                y = risk1;
+                            series.addPoint([x, y], true, true);
+
+                        }, 20000);
+                    }
+                }
+            };
+            var title = {
+                text: '睡眠呼吸中止症風險'
+            };
+            var xAxis = {
+                type: 'datetime',
+                tickPixelInterval: 1000
+            };
+            var yAxis = {
+                title: {
+                    text: 'Risk'
+                },
+                ticks: {
+                    // steps: 10,
+                    // stepValue: 10,
+                    max: 3,
+                    min: 0
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            };
+            var tooltip = {
+                formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                        Highcharts.numberFormat(this.y, 2);
+                }
+            };
+            var plotOptions = {
+                area: {
+                    pointStart: 1940,
+                    marker: {
+                        enabled: false,
+                        symbol: 'circle',
+                        radius: 2,
+                        states: {
+                            hover: {
+                                enabled: true
+                            }
+                        }
+                    }
+                }
+            };
+            var legend = {
+                enabled: false
+            };
+            var exporting = {
+                enabled: false
+            };
+            var series = [{
+                // name: 'Random data',
+                data: (function () {
+                    // generate an array of random data
+                    var data = [], time = (new Date()).getTime(), i;
+                    for (i = -19; i <= 0; i += 1) {
+                        data.push({
+                            x: time + i * 2000,
+                            y: 0
+                        });
+                    }
+                    return data;
+                }())
+            }];
+
+            var json = {};
+            json.chart = chart;
+            json.title = title;
+            json.tooltip = tooltip;
+            json.xAxis = xAxis;
+            json.yAxis = yAxis;
+            json.legend = legend;
+            json.exporting = exporting;
+            json.series = series;
+            json.plotOptions = plotOptions;
+
+
+            Highcharts.setOptions({
+                global: {
+                    useUTC: false
+                }
+            });
+            $('#container1').highcharts(json);
+
+        });
+
+    </script>
+</body>
+
+</html>
